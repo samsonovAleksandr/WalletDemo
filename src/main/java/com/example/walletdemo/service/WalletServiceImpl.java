@@ -10,9 +10,13 @@ import com.example.walletdemo.mapper.WalletToWalletDTO;
 import com.example.walletdemo.model.Wallet;
 import com.example.walletdemo.repository.WalletRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,6 +32,7 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void postWallet(WalletJSON wallet) {
         if (wallet.getOperationType() != WalletOperation.DEPOSIT
                 && wallet.getOperationType() != WalletOperation.WITHDRAW) {
@@ -36,6 +41,7 @@ public class WalletServiceImpl implements WalletService {
         repository.findById(wallet.getWalletId())
                 .orElseThrow(() -> new WalletNotFoundException("Кашелька с таким UUID не найдено"));
         Wallet wl = repository.getReferenceById(wallet.getWalletId());
+       Optional<Wallet> wl2 =  repository.findById(wallet.getWalletId());
         BigDecimal amount = wallet.getAmount();
 
         if (amount.compareTo(wl.getAmount()) > 0) {
